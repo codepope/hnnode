@@ -55,7 +55,7 @@ function idToItemLink(id,text) {
 }
 
 function idToUserLink(id) {
-  return "<https://news.ycombinator.com/user?id="+id+"|"+entities.decodeHTML(id)+">"
+  return `<https://news.ycombinator.com/user?id=${id}|${entities.decodeHTML(id)}>`;
 }
 
 function post(row, enc, next) {
