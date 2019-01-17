@@ -1,3 +1,7 @@
+#!/usr/bin/env node
+
+const argv = require('yargs').default("word","mongodb").argv
+
 const { IncomingWebhook } = require("@slack/client");
 
 var hyperquest = require("hyperquest");
@@ -15,7 +19,10 @@ const webhook = new IncomingWebhook(webhookurl);
 
 source = "http://api.hnstream.com/comments/stream/";
 
-target = "mongodb";
+
+target = argv.word;
+
+console.log(`Will look for ${target}`);
 
 var skipNoMatch = filter({ objectMode: true }, function(chunk) {
   return (
@@ -44,7 +51,7 @@ strm.pipeline(
 );
 
 function idToItemLink(id,text) {
-  return "<https://news.ycombinator.com/item?id="+id+"|"+entities.decodeHTML(text)+">";
+  return `<https://news.ycombinator.com/item?id=${id}|${entities.decodeHTML(text)}>`;
 }
 
 function idToUserLink(id) {
