@@ -30,10 +30,17 @@ var skipNoMatch = filter({ objectMode: true }, function(chunk) {
   );
 });
 
-
+var countskips=0;
 
 var heartbeat = spy({ objectMode: false }, function(chunk) {
-  console.log(".");
+  countskips++;
+});
+
+var heartbeatreset = spy({ objectMode: true }, function(chunk) {
+  if(countskips!=0) {
+    console.log(`Skipped ${countskips}`);
+  }
+  countskips=0;
 });
 
 stream.pipeline(
@@ -41,6 +48,7 @@ stream.pipeline(
   heartbeat,
   ndjson.parse({ strict: false }),
   skipNoMatch,
+  heartbeatreset,
   through2.obj(post),
   err => {
     if (err) {
