@@ -13,6 +13,8 @@ var filter = require("through2-filter");
 var spy = require("through2-spy");
 var entities = require("entities");
 var slackify = require("slackify-html");
+var Sentiment = require('sentiment');
+var sentiment = new Sentiment();
 
 var webhookurl = process.env.SLACK_HNMONITOR_WEBHOOK_URL;
 const webhook = new IncomingWebhook(webhookurl);
@@ -48,6 +50,7 @@ stream.pipeline(
   heartbeat,
   ndjson.parse({ strict: false }),
   skipNoMatch,
+  through2.obj(sentimental),
   heartbeatreset,
   through2.obj(post),
   err => {
@@ -73,7 +76,13 @@ function idToUserLink(id) {
 
 function post(row, enc, cb) {
   console.log("Posting")
-  msg="In *"+idToItemLink(row["article-id"],row["article-title"])+"* _"+idToUserLink(row.author)+"_ "+idToItemLink(row.id,"said")+"\n"+slackify(row.body);
+  emoji=":neutral_face:";
+  if(row.score<-1) {
+    emoji=":angry:";
+  } else if (row.score>1) {
+    emoji=":simple_smile:";
+  }
+  msg=`${emoji} - *${idToItemLink(row["article-id"],row["article-title"])}* _${idToUserLink(row.author)}_ ${idToItemLink(row.id,"said")} ${row.score}\n${slackify(row.body)}`;
   webhook.send(msg, (err, res) => {
     if (err) {
       console.log("Error:", err);
@@ -85,6 +94,13 @@ function post(row, enc, cb) {
   });
 }
 
+function sentimental(row,enc,cb) {
+  console.log("Sentimentalising");
+  result=sentiment.analyze(row.body);
+  row.score=result.score;
+  console.log(row.score)
+  cb(null,row);
+}
 
 // var dumpchunk = spy({ objectMode: true },function(chunk) {
 //   console.log("Dump");
