@@ -75,30 +75,32 @@ function idToUserLink(id) {
 }
 
 function post(row, enc, cb) {
-  console.log("Posting")
+  // console.log("Posting")
   emoji=":neutral_face:";
   if(row.score<-1) {
     emoji=":angry:";
   } else if (row.score>1) {
     emoji=":simple_smile:";
   }
-  msg=`${emoji} - *${idToItemLink(row["article-id"],row["article-title"])}* _${idToUserLink(row.author)}_ ${idToItemLink(row.id,"said")} ${row.score}\n${slackify(row.body)}`;
+  msg=`${emoji} ${row.score} - *${idToItemLink(row["article-id"],row["article-title"])}* _${idToUserLink(row.author)}_ ${idToItemLink(row.id,"said")}\n${slackify(row.body)}`;
+  // console.log(row.body);
+  // console.log(slackify(row.body));
+  //cb();
   webhook.send(msg, (err, res) => {
     if (err) {
       console.log("Error:", err);
-    } else {
-      console.log("Sent:", row);
-    }
-    console.log("Posted")
+    } 
+    // else {
+    //   console.log("Sent:", row);
+    // }
+    // console.log("Posted")
     cb();
   });
 }
 
 function sentimental(row,enc,cb) {
-  console.log("Sentimentalising");
   result=sentiment.analyze(row.body);
   row.score=result.score;
-  console.log(row.score)
   cb(null,row);
 }
 
@@ -106,3 +108,4 @@ function sentimental(row,enc,cb) {
 //   console.log("Dump");
 //   console.log(JSON.stringify(chunk, null, " "));
 // });
+
