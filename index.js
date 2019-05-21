@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const argv = require("yargs").default("word", "mongodb").argv;
+// const argv = require("yargs").default("word", "/th((is)|(ere)) /").argv;
+
+const argv = require("yargs").default("word", "/mongo(db|) /").argv;
 
 const { IncomingWebhook } = require("@slack/client");
 
@@ -22,14 +24,29 @@ const webhook = new IncomingWebhook(webhookurl);
 source = "http://api.hnstream.com/comments/stream/";
 
 target = argv.word;
+targetRegexp = null;
 
-console.log(`Will look for ${target}`);
+if(target.startsWith("/") && target.endsWith("/")) {
+  // Matching against a regexp
+  slice=target.slice(1,-1)
+  targetRegexp=new RegExp(slice,'i')
+  console.log("Will look for regular expression ${slice}")
+} else {
+  console.log(`Will look for ${target}`);
+}
 
 var skipNoMatch = filter({ objectMode: true }, function(chunk) {
+  if(targetRegexp==null) {
   return (
     chunk.body.toLowerCase().includes(target) ||
     chunk["article-title"].toLowerCase().includes(target)
   );
+  } else {
+    return (
+      chunk.body.match(targetRegexp) ||
+      chunk["article-title"].toLowerCase().match(targetRegexp)
+    );
+  }
 });
 
 var countskips=0;
@@ -85,15 +102,15 @@ function post(row, enc, cb) {
   msg=`${emoji} ${row.score} - *${idToItemLink(row["article-id"],row["article-title"])}* _${idToUserLink(row.author)}_ ${idToItemLink(row.id,"said")}\n${slackify(row.body)}`;
   // console.log(row.body);
   // console.log(slackify(row.body));
-  //cb();
+  // cb();
   webhook.send(msg, (err, res) => {
     if (err) {
       console.log("Error:", err);
     } 
-    // else {
-    //   console.log("Sent:", row);
-    // }
-    // console.log("Posted")
+    else {
+      console.log("Sent:", row);
+    }
+    console.log("Posted")
     cb();
   });
 }
