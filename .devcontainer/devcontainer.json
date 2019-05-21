@@ -1,6 +1,6 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-	"name": "Node.js 8 & TypeScript",
+	"name": "Node.js 12 & TypeScript",
 	"dockerFile": "Dockerfile",
 	"extensions": [
 		"ms-vscode.vscode-typescript-tslint-plugin"

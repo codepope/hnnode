@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Uncomment for test
 // const argv = require("yargs").default("word", "/th((is)|(ere)) /").argv;
 
 const argv = require("yargs").default("word", "/mongo(db|) /").argv;
