@@ -29,6 +29,13 @@ source = "http://api.hnstream.com/comments/stream/";
 target = argv.regexp; // word is the raw expression we are looking for
 echo = argv.echo; // Send or just echo result for testing
 targetRegexp = new RegExp(target, "i");
+
+if(target.slice(-1)==" ") {
+  subRegexp=new RegExp(target.slice(0,-1),"gi");
+} else {
+  subRegexp=new RegExp(target, "gi")
+}
+
 console.log(`Will look for regular expression ${targetRegexp}`);
 
 var skipNoMatch = filter({ objectMode: true }, function(chunk) {
@@ -97,7 +104,7 @@ function post(row, enc, cb) {
   }
 
   
-  body = row.body.replace(targetRegexp, "<b>$&</b>");
+  body = row.body.replace(subRegexp, "<b>$&</b>");
   
   msg = `${emoji} ${row.score} - *${idToItemLink(
     row["article-id"],
