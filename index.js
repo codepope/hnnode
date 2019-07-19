@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 // Uncomment for test
-// const argv = require("yargs").default("word", "/th((is)|(ere)) /").argv;
+// const argv = require("yargs").default("word", "th((is)|(ere)) ").argv;
 
-const argv = require("yargs").default("word", "/mongo(db|) /").argv;
+const argv = require("yargs")
+  .default("regexp", "mongo(db|) ")
+  .default("echo", false).argv;
 
 const { IncomingWebhook } = require("@slack/client");
 
@@ -24,18 +26,10 @@ const webhook = new IncomingWebhook(webhookurl);
 
 source = "http://api.hnstream.com/comments/stream/";
 
-target = argv.word;  // word is what we are looking for
-targetRegexp = null; // if target is a regexp, used for matching
-subRegexp = null;    // used for replacing not matching
-
-if (target.startsWith("/") && target.endsWith("/")) {
-  // Matching against a regexp
-  slice = target.slice(1, -1);
-  targetRegexp = new RegExp(slice, "i");
-  console.log(`Will look for regular expression ${slice}`);
-} else {
-  console.log(`Will look for ${target}`);ß
-}
+target = argv.regexp; // word is the raw expression we are looking for
+echo = argv.echo; // Send or just echo result for testing
+targetRegexp = new RegExp(target, "i");
+console.log(`Will look for regular expression ${targetRegexp}`);
 
 var skipNoMatch = filter({ objectMode: true }, function(chunk) {
   if (targetRegexp == null) {
@@ -102,33 +96,29 @@ function post(row, enc, cb) {
     emoji = ":simple_smile:";
   }
 
-  if (targetRegexp == null) {
-    if (subRegexp==null) {
-      subRegexp=new RegExp(target,"i");
-    }
-    body = row.body.replace(subRegexp ,"<b>$&</b>");
-  } else {
-    body = row.body.replace(targetRegexp, "<b>$&</b>");
-  }
+  
+  body = row.body.replace(targetRegexp, "<b>$&</b>");
+  
   msg = `${emoji} ${row.score} - *${idToItemLink(
     row["article-id"],
     row["article-title"]
   )}* _${idToUserLink(row.author)}_ ${idToItemLink(row.id, "said")}\n${slackify(
     body
   )}`;
-  console.log(body);
-  cb();
-
-  // webhook.send(msg, (err, res) => {
-  //   if (err) {
-  //     console.log("Error:", err);
-  //   }
-  //   else {
-  //     console.log("Sent:", row);
-  //   }
-  //   console.log("Posted")
-  //   cb();
-  // });
+  if (echo) {
+    console.log(body);
+    cb();
+  } else {
+    webhook.send(msg, (err, res) => {
+      if (err) {
+        console.log("Error:", err);
+      } else {
+        console.log("Sent:", row);
+      }
+      console.log("Posted");
+      cb();
+    });
+  }
 }
 
 function sentimental(row, enc, cb) {
