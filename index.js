@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 // Uncomment for test
-// const argv = require("yargs").default("word", "th((is)|(ere)) ").argv;
+// const argv = require("yargs").default("word", "th((is)|(ere))").argv;
 
 const argv = require("yargs")
-  .default("regexp", "mongo(db|) ")
+  .default("regexp", "mongo(db|)")
   .default("echo", false).argv;
 
 const { IncomingWebhook } = require("@slack/client");
@@ -28,13 +28,8 @@ source = "http://api.hnstream.com/comments/stream/";
 
 target = argv.regexp; // word is the raw expression we are looking for
 echo = argv.echo; // Send or just echo result for testing
-targetRegexp = new RegExp(target, "i");
-
-if(target.slice(-1)==" ") {
-  subRegexp=new RegExp(target.slice(0,-1),"gi");
-} else {
-  subRegexp=new RegExp(target, "gi")
-}
+targetRegexp = new RegExp("\\b"+target+"\\b", "i");
+subRegexp=new RegExp(target, "gi")
 
 console.log(`Will look for regular expression ${targetRegexp}`);
 
