@@ -2,10 +2,14 @@
 
 // Uncomment for test
 // const argv = require("yargs").default("word", "th((is)|(ere))").argv;
+//   .default("regexp", "(fly[.io])|(firecracker)|(wireguard)")
+// .default("regexp", "(microsoft)|(apple)|(facebook)")
+
 
 const argv = require("yargs")
-  .default("regexp", "mongo(db|)")
-  .default("echo", false).argv;
+   .default("regexp", "(fly\\.io)\\b|\\b(flyio)\\b|\\b(firecracker)\\b|\\b(wireguard)")
+  .default("echo", false)
+  .default("web", true).argv
 
 const { IncomingWebhook } = require("@slack/client");
 
@@ -24,6 +28,16 @@ var sentiment = new Sentiment();
 var webhookurl = process.env.SLACK_HNMONITOR_WEBHOOK_URL;
 const webhook = new IncomingWebhook(webhookurl);
 
+if(argv.web) {
+  const port = process.env.PORT || 3000;
+  var express=require("express");
+  var app=express();
+  app.use("/",(req,res)=> { res.send("Hello"); })
+  app.listen(port, () => console.log(`Hnnode listening on port ${port}!`));
+}
+
+console.log("Setting up streaming");
+
 source = "http://api.hnstream.com/comments/stream/";
 
 target = argv.regexp; // word is the raw expression we are looking for
@@ -34,6 +48,7 @@ subRegexp=new RegExp(target, "gi")
 console.log(`Will look for regular expression ${targetRegexp}`);
 
 var skipNoMatch = filter({ objectMode: true }, function(chunk) {
+  console.log(chunk);
   if (targetRegexp == null) {
     return (
       chunk.body.toLowerCase().includes(target) ||
